@@ -93,7 +93,7 @@ def addNumber(lista, broj, width, height, region, bbox):
             return False
     lista.append((broj, x, y, width))
 
-DIR = 'C:\Users\Mutic\Desktop\SoftDjole\soft2017\Videos'
+DIR = 'C:\Users\Mutic\Desktop\SoftDjole\soft2017'
 mnistFile = 'mnistPrepared'
 
 mnist = fetch_mldata('MNIST original')
