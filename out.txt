@@ -1,0 +1,22 @@
+Suma brojeva sa obradjenih video materijala: 
+RA 65/2013 Djordje Mutic
+Naziv video snimka: videos/video-0.avi 
+Rezultat: 14 
+Naziv video snimka: videos/video-1.avi 
+Rezultat: 62 
+Naziv video snimka: videos/video-2.avi 
+Rezultat: 69 
+Naziv video snimka: videos/video-3.avi 
+Rezultat: 67 
+Naziv video snimka: videos/video-4.avi 
+Rezultat: 52 
+Naziv video snimka: videos/video-5.avi 
+Rezultat: 43 
+Naziv video snimka: videos/video-6.avi 
+Rezultat: 67 
+Naziv video snimka: videos/video-7.avi 
+Rezultat: 60 
+Naziv video snimka: videos/video-8.avi 
+Rezultat: 61 
+Naziv video snimka: videos/video-9.avi 
+Rezultat: 57 
