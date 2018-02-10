@@ -17,14 +17,12 @@ def prepareTrainData(data):
     for i in range(0, len_data):
         number = data[i].reshape(28, 28)
         th = cv2.inRange(number, 150, 255)
-        closing = cv2.morphologyEx(th, cv2.MORPH_CLOSE, close_kernel)
-        labeled = label(closing)
-        regions = regionprops(labeled)
-        len_regions=len(regions)
-        if(len_regions > 1):
+        regioni = regionprops(label(cv2.morphologyEx(th, cv2.MORPH_CLOSE, close_kernel)))
+        len_regioni=len(regioni)
+        if(len_regioni > 1):
             max_height = 0
             max_width = 0
-            for region in regions:
+            for region in regioni:
                 t_bbox = region.bbox
                 t_height = t_bbox[2] - t_bbox[0]
                 t_width = t_bbox[3] - t_bbox[1]
@@ -33,7 +31,7 @@ def prepareTrainData(data):
                     max_width = t_width
                     max_height = t_height
         else:
-            bbox = regions[0].bbox
+            bbox = regioni[0].bbox
         x = 0
         img = np.zeros((28, 28))
         bbx1=bbox[1]
@@ -64,7 +62,7 @@ def getNumberImage(bbox, img):
             img_number[x, y] = img[x_dekr + bbox[0], y_dekr + bbox[1]]
     return img_number
 
-def presekSaPravom(bbox, height, width):
+def presekSaPravom(bbox):
     bbx3 = bbox[3]
     bbx0 = bbox[0]
     bbx1 = bbox[1]
@@ -127,48 +125,57 @@ for redniBrojSnimka in range(0, broj_snimaka):
     videoPutanja=video_imena[redniBrojSnimka]
     print 'Putanja do videa: ' + videoPutanja
     cap = cv2.VideoCapture(videoPutanja)
-    frameNum = 0
+    brojFrejma = 0
     lista_brojeva=[]
     while(cap.isOpened()):
         ret, frame = cap.read()
-        if(frameNum%2 != 0):
-            frameNum += 1
+        if(brojFrejma%2 != 0):
+            noviBrFr = brojFrejma + 1
+            brojFrejma = noviBrFr
             continue
         if(ret == False):
             break
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        if(frameNum == 0):
-            line_th = cv2.inRange(gray, 4, 55)
-            erosion = cv2.erode(line_th, eros_kernel, iterations=1)
-            skeleton = skeletonize(erosion/255.0)
+        #gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        if(brojFrejma == 0):
+            #line_th = cv2.inRange(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), 4, 55)
+            #erosion = cv2.erode(line_th, eros_kernel, iterations=1)
+            ek=eros_kernel
+            konstanta=255.0
+            skeleton = skeletonize(cv2.erode(cv2.inRange(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), 4, 55), ek, iterations=1)/konstanta)
             cv_skeleton = img_as_ubyte(skeleton)
-            lines = cv2.HoughLinesP(cv_skeleton, 1, np.pi/180, 100, minLineLength=100, maxLineGap=10)
+            k2=100
+            k1=np.pi/180
+            lines = cv2.HoughLinesP(cv_skeleton, 1, k1, k2, minLineLength=100, maxLineGap=10)
             x1, y1, x2, y2 = lines[0][0]
-        th = cv2.inRange(gray, 163, 255)
-        closing = cv2.morphologyEx(th, cv2.MORPH_CLOSE, close_kernel)
-        gray_labeled = label(closing)
-        regions = regionprops(gray_labeled)
-        for region in regions:
+        k4=255
+        k3=163
+        th = cv2.inRange(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), k3, k4)
+        regioni = regionprops(label(cv2.morphologyEx(th, cv2.MORPH_CLOSE, close_kernel)))
+        for region in regioni:
+            bbx3=region.bbox[3]
+            bbx2=region.bbox[2]
+            bbx1=region.bbox[1]
+            bbx0=region.bbox[0]
+            height = bbx2-bbx0
+            width = bbx3-bbx1
             bbox = region.bbox
-            height = bbox[2]-bbox[0]
-            width = bbox[3]-bbox[1]
-            if(height <= 10):
+            if( 10 >= height):
                 continue
-            if(presekSaPravom(bbox, height, width) == False):
+            psp=presekSaPravom(bbox)
+            if(psp == False):
                 continue
-            img_number = getNumberImage(bbox, gray)
-            num = int(knn.predict(img_number.reshape(1, 784)))
-            #cv2.line(gray,(x1,y1),(x2,y2),(255,255,255),1)
-            #plt.imshow(gray, 'gray')
-            #plt.show()
-            if (addNumber(width, lista_brojeva, bbox, num) == False):
+            br=knn.predict(getNumberImage(bbox, cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)).reshape(1, 784))#upravo prepoznat broj (drugi format)
+            if (addNumber(width, lista_brojeva, bbox, int(br)) == False):
                 continue
-            #print 'U frejmu '+ str(frameNum)+ '. prepoznat broj '+str(num)
-        frameNum += 1
+            #print 'U frejmu '+ str(brojFrejma)+ '. prepoznat broj '+str(num)
+        noviBrFr2 = brojFrejma + 1
+        brojFrejma = noviBrFr2
         cv2.imshow('frame', frame)
     suma=0
     for tup in lista_brojeva:
-        suma += tup[0]
+        t0=tup[0]
+        novaSuma = t0 + suma
+        suma = novaSuma
     print 'Suma: '+str(suma)+'\n'
     #OVDE da upisem u out.txt resenje za video
     videoSnimak = "videos/video-" + format(redniBrojSnimka) + ".avi"
