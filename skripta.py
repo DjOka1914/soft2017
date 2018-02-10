@@ -11,6 +11,7 @@ from sklearn.neighbors import KNeighborsClassifier
 
 import cv2
 
+
 def prepareTrainData(data):
     close_kernel = np.ones((5, 5), np.uint8)
     len_data=len(data)
@@ -47,6 +48,7 @@ def prepareTrainData(data):
             x += 1
         data[i] = img.reshape(1, 784)
 
+
 def getNumberImage(bbox, img):
     bbx1 = bbox[1]
     bbx2 = bbox[2]
@@ -61,6 +63,7 @@ def getNumberImage(bbox, img):
             y_dekr=y-1
             img_number[x, y] = img[x_dekr + bbox[0], y_dekr + bbox[1]]
     return img_number
+
 
 def presekSaPravom(bbox):
     bbx3 = bbox[3]
@@ -83,6 +86,7 @@ def presekSaPravom(bbox):
     else:
         return True
 
+
 def addNumber(width, lista, bbox, broj):
     for tup in lista:
         t2=tup[2]
@@ -97,29 +101,58 @@ def addNumber(width, lista, bbox, broj):
     bbx1=bbox[1]
     lista.append((broj, bbx1, bbx0, width))
 
-mnistOrString = 'MNIST original'
-mnistOriginal = fetch_mldata(mnistOrString)
 
+def linije(frame):
+    ek = eros_kernel
+    konstanta = 255.0
+    skeleton = skeletonize(
+        cv2.erode(cv2.inRange(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), 4, 55), ek, iterations=1) / konstanta)
+    cv_skeleton = img_as_ubyte(skeleton)
+    k2 = 100
+    k1 = np.pi / 180
+    lines = cv2.HoughLinesP(cv_skeleton, 1, k1, k2, minLineLength=100, maxLineGap=10)
+    return lines
+
+
+def pocniUpis():
+    izlazniFajl = open("out.txt", "w")
+    izlazniFajl.write("RA 65/2013 Djordje Mutic\n")
+    izlazniFajl.write("file\tsum\n")
+    izlazniFajl.close()
+
+
+def upisuj(redniBrojSnimka):
+    izlazniFajl = open("out.txt", "a")
+    videoSnimak = "video-" + format(redniBrojSnimka) + ".avi"
+    nazivVideoSnimka = "video-" + format(redniBrojSnimka) + ".avi"
+    izlazniFajl.write(str(videoSnimak) + "\t\t"+str(suma)+"\n")
+    #izlazniFajl.write("Rezultat: " + str(suma) + " \n")
+
+
+def saberi(lista_brojeva, suma):
+    for tup in lista_brojeva:
+        t0=tup[0]
+        novaSuma = t0 + suma
+        suma = novaSuma
+    return suma
+
+mnistOrString = 'MNIST original'
 DIRString = 'C:\Users\Mutic\Desktop\SoftProjekatDjole'
 DIR = DIRString
 if(os.path.exists(os.path.join(DIR, 'mnistPrepared')+'.npy')):
     train = np.load(os.path.join(DIR, 'mnistPrepared')+'.npy')
 else:
-    train = mnistOriginal.data
+    train = fetch_mldata(mnistOrString).data
     np.save(os.path.join(DIR, 'mnistPrepared'), train)
     prepareTrainData(train)
-train_labels = mnistOriginal.target
+train_labels = fetch_mldata(mnistOrString).target
 knn = KNeighborsClassifier(n_neighbors=1, algorithm='brute').fit(train, train_labels)
 
 eros_kernel = np.ones((2, 2), np.uint8)#Kernel koriscen prilikom erozije (priprema za skeleton operaciju)
 close_kernel = np.ones((4, 4), np.uint8)
 
 video_imena = [os.path.join(DIR+'\\Videos', naziv) for naziv in os.listdir(DIR+'\\Videos') if os.path.isfile(os.path.join(DIR+'\\Videos', naziv))]
-#ODAVDE
-izlazniFajl = open("out.txt","w")
-izlazniFajl.write("Suma brojeva sa obradjenih video materijala: \n")
-izlazniFajl.write("RA 65/2013 Djordje Mutic\n")
-#DOVDE
+pocniUpis()
 broj_snimaka=len(video_imena)
 for redniBrojSnimka in range(0, broj_snimaka):
     videoPutanja=video_imena[redniBrojSnimka]
@@ -135,17 +168,11 @@ for redniBrojSnimka in range(0, broj_snimaka):
             continue
         if(ret == False):
             break
-        #gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         if(brojFrejma == 0):
-            #line_th = cv2.inRange(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), 4, 55)
-            #erosion = cv2.erode(line_th, eros_kernel, iterations=1)
-            ek=eros_kernel
-            konstanta=255.0
-            skeleton = skeletonize(cv2.erode(cv2.inRange(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), 4, 55), ek, iterations=1)/konstanta)
-            cv_skeleton = img_as_ubyte(skeleton)
-            k2=100
-            k1=np.pi/180
-            lines = cv2.HoughLinesP(cv_skeleton, 1, k1, k2, minLineLength=100, maxLineGap=10)
+            #usivljena slika ... cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            #linija ............ cv2.inRange(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), 4, 55)
+            #erozija ........... cv2.erode(line_th, eros_kernel, iterations=1)
+            lines=linije(frame)
             x1, y1, x2, y2 = lines[0][0]
         k4=255
         k3=163
@@ -172,16 +199,8 @@ for redniBrojSnimka in range(0, broj_snimaka):
         brojFrejma = noviBrFr2
         cv2.imshow('frame', frame)
     suma=0
-    for tup in lista_brojeva:
-        t0=tup[0]
-        novaSuma = t0 + suma
-        suma = novaSuma
+    suma=saberi(lista_brojeva, suma)
     print 'Suma: '+str(suma)+'\n'
-    #OVDE da upisem u out.txt resenje za video
-    videoSnimak = "videos/video-" + format(redniBrojSnimka) + ".avi"
-    nazivVideoSnimka = "video-" + format(redniBrojSnimka) + ".avi"
-    izlazniFajl.write("Naziv video snimka: " + str(videoSnimak) + " \n")
-    izlazniFajl.write("Rezultat: " + str(suma) + " \n")
-    #DOVDE
+    upisuj(redniBrojSnimka) # upisujem u out.txt resenja
 cap.release()
 cv2.destroyAllWindows()
