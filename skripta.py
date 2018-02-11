@@ -8,41 +8,41 @@ from skimage import img_as_ubyte
 import numpy as np
 
 
-def prepareTrainData(data):
-    zatvori_kernel = np.ones((5, 5), np.uint8)
-    len_data=len(data)
-    for i in range(0, len_data):
-        number = data[i].reshape(28, 28)
-        th = cv2.inRange(number, 150, 255)
-        regioni = regionprops(label(cv2.morphologyEx(th, cv2.MORPH_CLOSE, zatvori_kernel)))
-        len_regioni=len(regioni)
-        if(len_regioni > 1):
-            max_visina = 0
-            max_sirina = 0
-            for region in regioni:
-                t_bbox = region.bbox
-                t_visina = t_bbox[2] - t_bbox[0]
-                t_sirina = t_bbox[3] - t_bbox[1]
-                if(max_visina < t_visina and max_sirina < t_sirina):
-                    bbox = t_bbox
-                    max_sirina = t_sirina
-                    max_visina = t_visina
-        else:
-            bbox = regioni[0].bbox
-        x = 0
-        img = np.zeros((28, 28))
-        bbx1=bbox[1]
-        bbx2=bbox[2]
-        bbx0=bbox[0]
-        bbx3=bbox[3]
-        y = 0
-        for red in range(bbx0, bbx2):
-            for kol in range(bbx1, bbx3):
-                img[x, y] = number[red, kol]
-                y_ink=y+1
-                y=y_ink
-            x += 1
-        data[i] = img.reshape(1, 784)
+#def prepareTrainData(data):
+#    zatvori_kernel = np.ones((5, 5), np.uint8)
+#    len_data=len(data)
+#    for i in range(0, len_data):
+#        number = data[i].reshape(28, 28)
+#        th = cv2.inRange(number, 150, 255)
+#        regioni = regionprops(label(cv2.morphologyEx(th, cv2.MORPH_CLOSE, zatvori_kernel)))
+#        len_regioni=len(regioni)
+#        if(len_regioni > 1):
+#            max_visina = 0
+#            max_sirina = 0
+#            for region in regioni:
+#                t_bbox = region.bbox
+#                t_visina = t_bbox[2] - t_bbox[0]
+#                t_sirina = t_bbox[3] - t_bbox[1]
+#                if(max_visina < t_visina and max_sirina < t_sirina):
+#                    bbox = t_bbox
+#                    max_sirina = t_sirina
+#                    max_visina = t_visina
+#        else:
+#            bbox = regioni[0].bbox
+#        x = 0
+#        img = np.zeros((28, 28))
+#        bbx1=bbox[1]
+#        bbx2=bbox[2]
+#        bbx0=bbox[0]
+#        bbx3=bbox[3]
+#        y = 0
+#        for red in range(bbx0, bbx2):
+#            for kol in range(bbx1, bbx3):
+#                img[x, y] = number[red, kol]
+#                y_ink=y+1
+#                y=y_ink
+#            x += 1
+#        data[i] = img.reshape(1, 784)
 
 
 def getNumberImage(bbox, img):
@@ -137,10 +137,10 @@ DIRString = 'C:\Users\Mutic\Desktop\SoftProjekatDjole'
 DIR = DIRString
 if(os.path.exists(os.path.join(DIR, 'mnistPrepared')+'.npy')):
     train = np.load(os.path.join(DIR, 'mnistPrepared')+'.npy')
-else:
-    train = fetch_mldata(mnistOrString).data
-    np.save(os.path.join(DIR, 'mnistPrepared'), train)
-    prepareTrainData(train)
+#else:
+#    train = fetch_mldata(mnistOrString).data
+#    np.save(os.path.join(DIR, 'mnistPrepared'), train)
+#    prepareTrainData(train)
 train_labels = fetch_mldata(mnistOrString).target
 knc = KNeighborsClassifier(n_neighbors=1, algorithm='brute').fit(train, train_labels)
 
